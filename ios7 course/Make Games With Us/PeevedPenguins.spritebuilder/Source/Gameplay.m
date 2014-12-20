@@ -23,6 +23,7 @@ static const float MIN_SPEED = 7.f;
     Penguin *_currentPenguin;
     CCPhysicsJoint *_penguinCatapultJoint;
     CCAction *_followPenguin;
+    int sealExplosionNumber;
 }
 
 //is called when CCB file has completed loading
@@ -31,6 +32,8 @@ static const float MIN_SPEED = 7.f;
     _physicsNode.collisionDelegate = self;
     
     self.userInteractionEnabled = TRUE;
+    
+    sealExplosionNumber = 0;
     
     CCNode *level = [CCBReader load:@"Level1"];
     [_levelNode addChild:level];
@@ -139,14 +142,20 @@ static const float MIN_SPEED = 7.f;
     }
 }
 
--(void)sealRemoved:(CCNode *)seal {
+-(void)sealRemoved:(CCSprite *)seal {
     
-    CCParticleSystem *explosion = (CCParticleSystem *)[CCBReader load:@"SealExplosion"];
-    explosion.autoRemoveOnFinish = TRUE;
-    explosion.position = seal.position;
-    [seal.parent addChild:explosion];
+    CCTexture *texture = [CCTexture textureWithFile:@"janeBlasted.png"];
     
-    [seal removeFromParent];
+    seal.texture = texture;
+
+//    CCParticleSystem *explosion = (CCParticleSystem *)[CCBReader load:@"SealExplosion"];
+//    explosion.autoRemoveOnFinish = TRUE;
+//    explosion.position = seal.position;
+//    [seal.parent addChild:explosion];
+    
+    sealExplosionNumber = sealExplosionNumber + 1;
+    
+//    [seal removeFromParent];
 }
 
 -(void)update:(CCTime)delta
@@ -180,8 +189,14 @@ static const float MIN_SPEED = 7.f;
     _currentPenguin = nil;
     [_contentNode stopAction:_followPenguin];
     
-    CCActionMoveTo *actionMoveTo = [CCActionMoveTo actionWithDuration:1.f position:ccp(0,0)];
-    [_contentNode runAction:actionMoveTo];
+    if (sealExplosionNumber >= 11) {
+        [[CCDirector sharedDirector] replaceScene:[CCBReader loadAsScene:@"MerryChristmas"]];
+    }
+    
+    else {
+        CCActionMoveTo *actionMoveTo = [CCActionMoveTo actionWithDuration:1.f position:ccp(0,0)];
+        [_contentNode runAction:actionMoveTo];
+    }
 }
 
 
@@ -189,6 +204,7 @@ static const float MIN_SPEED = 7.f;
 {
     //reload this level
     [[CCDirector sharedDirector] replaceScene:[CCBReader loadAsScene:@"Gameplay"]];
+    sealExplosionNumber = 0;
 }
 
 @end
